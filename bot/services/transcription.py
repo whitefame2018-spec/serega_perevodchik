@@ -1,6 +1,7 @@
+import time
 from pathlib import Path
 
-import assemblyai as aai
+import httpx
 
 
 class AssemblyAITranscriber:
