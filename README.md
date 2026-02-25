@@ -1,6 +1,6 @@
 # Telegram-бот для перевода видео по ссылке
 
-Бот принимает ссылку на видео, скачивает аудио, делает транскрипцию через **AssemblyAI API** (есть бесплатный tier), переводит текст через **LibreTranslate API** и отправляет пользователю пруф для подтверждения.
+Бот принимает ссылку на видео, скачивает аудио, делает транскрипцию через **AssemblyAI** (есть бесплатный tier), переводит текст через **LibreTranslate API** и отправляет пользователю пруф для подтверждения.
 
 ## Архитектура (по вашей схеме)
 
@@ -32,12 +32,31 @@ requirements.txt
 
 ## Установка
 
+### Linux / macOS
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+### Windows (PowerShell)
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
+
+### Windows (cmd)
+
+```bat
+python -m venv .venv
+.venv\Scripts\activate.bat
+pip install -r requirements.txt
+```
+
+> Нужен установленный `ffmpeg` в системе (на Windows удобно поставить через `winget install Gyan.FFmpeg` или `choco install ffmpeg`).
 > Нужен установленный `ffmpeg` в системе.
 
 ## Переменные окружения
