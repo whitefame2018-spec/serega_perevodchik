@@ -1,15 +1,17 @@
 # Telegram-бот для перевода видео по ссылке
 
-Бот принимает ссылку на видео, скачивает аудио, делает транскрипцию через **Whisper (локально)**, переводит текст через **LibreTranslate (self-hosted)** и отправляет пользователю пруф для подтверждения.
+Бот принимает ссылку на видео, скачивает видеофайл, делает транскрипцию через **Whisper (локально)**, переводит сегменты через **LibreTranslate (self-hosted)** и отправляет пользователю **видео с переведёнными субтитрами** + текст перевода.
 
-## Архитектура
+## Что умеет бот
 
-1. Пользователь отправляет ссылку.
-2. Бот (опционально) логирует ссылку в Google Sheets.
-3. Бот скачивает аудио (`yt-dlp` + ffmpeg).
-4. Делает локальную транскрибацию через Whisper.
-5. Переводит текст через локальный LibreTranslate.
-6. Отправляет пруф с кнопками approve/reject.
+1. Принимает ссылку на видео.
+2. Скачивает видео (`yt-dlp`).
+3. Делает локальную транскрипцию (Whisper).
+4. Переводит сегменты транскрипции (LibreTranslate).
+5. Генерирует `.srt` и вшивает субтитры в видео (`ffmpeg`).
+6. Отправляет пруф, затем по approve присылает `.txt` + видео с переводом.
+
+> Сейчас реализован вариант **субтитров**. Архитектура позволяет позже добавить озвучку (TTS + микширование аудио), если потребуется.
 
 ## Структура проекта
 
@@ -20,9 +22,10 @@ bot/
   handlers.py
   keyboards.py
   services/
-    video.py
-    transcription.py  # Whisper
-    translation.py    # LibreTranslate
+    video.py         # скачивание видео + вшивание субтитров
+    transcription.py # Whisper + сегменты
+    translation.py   # LibreTranslate
+    subtitles.py     # генерация .srt
     sheets.py
     storage.py
 requirements.txt
@@ -59,17 +62,6 @@ python -m pip install -r requirements.txt
 
 > Нужен установленный `ffmpeg` в системе.
 
-## Частая ошибка: `ModuleNotFoundError: No module named aiogram`
-
-Зависимости установлены не в тот Python/окружение.
-
-Проверьте:
-
-```bash
-python -m pip show aiogram
-python -c "import aiogram; print(aiogram.__version__)"
-```
-
 ## Переменные окружения (`.env`)
 
 ```env
@@ -95,6 +87,14 @@ GOOGLE_SHEETS_SPREADSHEET_ID=
 GOOGLE_SHEETS_WORKSHEET=Sheet1
 ```
 
+## Проверка LibreTranslate (локально)
+
+```bash
+curl -X POST http://127.0.0.1:5000/translate \
+  -H "Content-Type: application/json" \
+  -d '{"q":"hello","source":"en","target":"ru","format":"text"}'
+```
+
 ## Как поднять LibreTranslate локально
 
 ```bash
@@ -106,9 +106,3 @@ docker run -d -p 5000:5000 libretranslate/libretranslate
 ```bash
 python -m bot.main
 ```
-
-## Важно про Whisper
-
-- Whisper работает **локально**, ключ API для транскрибации не нужен.
-- Первый запуск может быть дольше, потому что загружается модель.
-- Можно менять размер модели через `WHISPER_MODEL` (`tiny`, `base`, `small`, `medium`, `large`).

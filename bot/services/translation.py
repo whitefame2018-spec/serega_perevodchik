@@ -2,6 +2,8 @@ from urllib.parse import urlparse
 
 import httpx
 
+from bot.services.transcription import TranscriptSegment
+
 
 class LibreTranslator:
     def __init__(
@@ -51,3 +53,15 @@ class LibreTranslator:
                 raise RuntimeError(f"LibreTranslate returned unexpected payload: {data}")
 
             return translated
+
+    def translate_segments(self, segments: list[TranscriptSegment]) -> list[TranscriptSegment]:
+        translated_segments: list[TranscriptSegment] = []
+        for segment in segments:
+            translated_segments.append(
+                TranscriptSegment(
+                    start=segment.start,
+                    end=segment.end,
+                    text=self.translate(segment.text),
+                )
+            )
+        return translated_segments

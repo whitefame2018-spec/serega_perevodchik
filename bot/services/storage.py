@@ -15,7 +15,9 @@ class TranslationJob:
     source_url: str
     transcript: str
     translated_text: str
-    media_path: str
+    source_video_path: str
+    subtitled_video_path: str
+    subtitles_path: str
     status: JobStatus = JobStatus.pending_review
 
 

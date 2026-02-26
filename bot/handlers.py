@@ -6,6 +6,7 @@ from aiogram.types import CallbackQuery, FSInputFile, Message
 from bot.keyboards import review_keyboard
 from bot.services.sheets import GoogleSheetsLogger
 from bot.services.storage import InMemoryJobStore, JobStatus, TranslationJob
+from bot.services.subtitles import SubtitleService
 from bot.services.transcription import WhisperTranscriber
 from bot.services.translation import LibreTranslator
 from bot.services.video import VideoService
@@ -19,6 +20,7 @@ class HandlerDeps:
         self,
         store: InMemoryJobStore,
         video_service: VideoService,
+        subtitle_service: SubtitleService,
         transcriber: WhisperTranscriber,
         translator: LibreTranslator,
         sheets_logger: GoogleSheetsLogger,
@@ -26,6 +28,7 @@ class HandlerDeps:
     ) -> None:
         self.store = store
         self.video_service = video_service
+        self.subtitle_service = subtitle_service
         self.transcriber = transcriber
         self.translator = translator
         self.sheets_logger = sheets_logger
@@ -44,8 +47,8 @@ def configure(dependencies: HandlerDeps) -> None:
 async def start(message: Message) -> None:
     await message.answer(
         "Привет! Пришли ссылку на видео.\n"
-        "Я извлеку аудио, сделаю транскрипцию, переведу текст через LibreTranslate "
-        "и отправлю на проверку."
+        "Я скачаю видео, сделаю транскрипцию через Whisper, переведу через LibreTranslate "
+        "и пришлю видео с субтитрами на проверку."
     )
 
 
@@ -64,21 +67,30 @@ async def process_video_link(message: Message) -> None:
 
     deps.sheets_logger.append_link(message.from_user.id, link, status="queued")
 
-    audio_path = deps.video_service.download_audio(link, job_id)
-    await message.answer("Аудио готово, запускаю транскрипцию…")
+    source_video = deps.video_service.download_video(link, job_id)
+    await message.answer("Видео скачано, запускаю транскрипцию Whisper…")
 
-    transcript = deps.transcriber.transcribe(audio_path)
-    await message.answer("Транскрипция готова, запускаю перевод…")
+    transcription = deps.transcriber.transcribe(source_video)
+    await message.answer("Транскрипция готова, перевожу сегменты…")
 
-    translated_text = deps.translator.translate(transcript)
+    translated_segments = deps.translator.translate_segments(transcription.segments)
+    translated_text = " ".join(segment.text for segment in translated_segments)
+
+    subtitles_path = deps.subtitle_service.write_srt(
+        translated_segments,
+        deps.video_service.temp_dir / f"{job_id}.srt",
+    )
+    subtitled_video_path = deps.video_service.burn_subtitles(source_video, subtitles_path, job_id)
 
     job = TranslationJob(
         job_id=job_id,
         user_id=message.from_user.id,
         source_url=link,
-        transcript=transcript,
+        transcript=transcription.text,
         translated_text=translated_text,
-        media_path=str(audio_path),
+        source_video_path=str(source_video),
+        subtitled_video_path=str(subtitled_video_path),
+        subtitles_path=str(subtitles_path),
     )
     deps.store.put(job)
 
@@ -107,7 +119,11 @@ async def approve_translation(query: CallbackQuery) -> None:
     with open(text_file, "w", encoding="utf-8") as f:
         f.write(job.translated_text)
 
-    await query.message.answer_document(FSInputFile(text_file), caption="Перевод подтверждён.")
+    await query.message.answer_document(FSInputFile(text_file), caption="Текст перевода подтверждён.")
+    await query.message.answer_video(
+        FSInputFile(job.subtitled_video_path),
+        caption="Видео с переведёнными субтитрами готово ✅",
+    )
     await query.answer("Готово")
 
 
@@ -124,8 +140,10 @@ async def reject_translation(query: CallbackQuery) -> None:
 
     job.status = JobStatus.rejected
     deps.sheets_logger.append_link(job.user_id, job.source_url, status="rejected")
-    deps.video_service.cleanup(job.media_path)
+    deps.video_service.cleanup(job.source_video_path)
+    deps.video_service.cleanup(job.subtitled_video_path)
+    deps.video_service.cleanup(job.subtitles_path)
     deps.store.delete(job_id)
 
-    await query.message.answer("Отклонено. Файл удалён.")
+    await query.message.answer("Отклонено. Файлы удалены.")
     await query.answer("Удалено")

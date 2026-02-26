@@ -6,6 +6,7 @@ from bot.config import load_settings
 from bot.handlers import HandlerDeps, configure, router
 from bot.services.sheets import GoogleSheetsLogger
 from bot.services.storage import InMemoryJobStore
+from bot.services.subtitles import SubtitleService
 from bot.services.transcription import WhisperTranscriber
 from bot.services.translation import LibreTranslator
 from bot.services.video import VideoService
@@ -21,6 +22,7 @@ async def main() -> None:
         HandlerDeps(
             store=InMemoryJobStore(),
             video_service=VideoService(settings.temp_dir),
+            subtitle_service=SubtitleService(),
             transcriber=WhisperTranscriber(model_name=settings.whisper_model, language=settings.whisper_language),
             translator=LibreTranslator(
                 base_url=settings.libretranslate_url,
