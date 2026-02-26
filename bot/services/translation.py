@@ -1,5 +1,3 @@
-from urllib.parse import urlparse
-
 import httpx
 
 
@@ -11,18 +9,10 @@ class LibreTranslator:
         target_lang: str,
         api_key: str | None = None,
     ) -> None:
-        self.base_url = self._normalize_url(base_url)
+        self.base_url = base_url
         self.source_lang = source_lang
         self.target_lang = target_lang
         self.api_key = api_key
-
-    @staticmethod
-    def _normalize_url(base_url: str) -> str:
-        url = base_url.strip().rstrip("/")
-        path = urlparse(url).path
-        if path in {"", "/"}:
-            return f"{url}/translate"
-        return url
 
     def translate(self, text: str) -> str:
         payload = {

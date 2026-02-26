@@ -30,10 +30,7 @@ def load_settings() -> Settings:
     if not telegram_token:
         raise ValueError("TELEGRAM_BOT_TOKEN is required")
     if not assemblyai_api_key:
-        raise ValueError(
-            "ASSEMBLYAI_API_KEY is required. "
-            "Мы используем официальный SDK из GitHub, но он обращается к облачному сервису AssemblyAI."
-        )
+        raise ValueError("ASSEMBLYAI_API_KEY is required")
 
     return Settings(
         telegram_token=telegram_token,
