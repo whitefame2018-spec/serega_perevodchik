@@ -69,11 +69,11 @@ pip install -r requirements.txt
 
 ```env
 TELEGRAM_BOT_TOKEN=...
-ASSEMBLYAI_API_KEY=...
+ASSEMBLYAI_API_KEY=...  # ключ из личного кабинета AssemblyAI
 
 # LibreTranslate (локальный/self-hosted)
 LIBRETRANSLATE_URL=http://127.0.0.1:5000/translate
-LIBRETRANSLATE_API_KEY=
+LIBRETRANSLATE_API_KEY=  # для локального LibreTranslate обычно пусто
 SOURCE_LANG=auto
 TARGET_LANG=ru
 
@@ -86,6 +86,33 @@ GOOGLE_SHEETS_CREDENTIALS_PATH=./google_service_account.json
 GOOGLE_SHEETS_SPREADSHEET_ID=
 GOOGLE_SHEETS_WORKSHEET=Sheet1
 ```
+
+
+## Важно про AssemblyAI
+
+Мы действительно используем **код из GitHub** (официальный SDK `assemblyai`),
+но сам SDK отправляет запросы в облачный сервис AssemblyAI.
+Поэтому `ASSEMBLYAI_API_KEY` в `.env` всё равно нужен.
+
+Если хотите полностью локальную транскрибацию без облачного ключа — нужно подключать другой движок (например, Whisper локально), это отдельная доработка.
+
+
+## Важно про LibreTranslate (локально)
+
+- Если вы подняли LibreTranslate **локально**, отдельный ключ обычно **не нужен**.
+  Оставьте `LIBRETRANSLATE_API_KEY=` пустым.
+- В `LIBRETRANSLATE_URL` можно указывать как `http://127.0.0.1:5000`, так и `http://127.0.0.1:5000/translate`
+  (бот сам нормализует URL).
+
+### Быстрая проверка, что локальный LibreTranslate живой
+
+```bash
+curl -X POST http://127.0.0.1:5000/translate \
+  -H "Content-Type: application/json" \
+  -d '{"q":"hello","source":"en","target":"ru","format":"text"}'
+```
+
+Если в ответе есть `translatedText`, значит сервис работает корректно.
 
 ## Как поднять LibreTranslate локально (пример)
 

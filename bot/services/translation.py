@@ -25,6 +25,19 @@ class LibreTranslator:
             payload["api_key"] = self.api_key
 
         with httpx.Client(timeout=90.0) as client:
-            response = client.post(self.base_url, data=payload)
-            response.raise_for_status()
-            return response.json()["translatedText"]
+            response = client.post(
+                self.base_url,
+                json=payload,
+                headers={"accept": "application/json"},
+            )
+            if response.status_code >= 400:
+                raise RuntimeError(
+                    f"LibreTranslate request failed ({response.status_code}): {response.text}"
+                )
+
+            data = response.json()
+            translated = data.get("translatedText")
+            if not translated:
+                raise RuntimeError(f"LibreTranslate returned unexpected payload: {data}")
+
+            return translated
