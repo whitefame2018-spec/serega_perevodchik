@@ -6,7 +6,7 @@ from aiogram.types import CallbackQuery, FSInputFile, Message
 from bot.keyboards import review_keyboard
 from bot.services.sheets import GoogleSheetsLogger
 from bot.services.storage import InMemoryJobStore, JobStatus, TranslationJob
-from bot.services.transcription import AssemblyAITranscriber
+from bot.services.transcription import WhisperTranscriber
 from bot.services.translation import LibreTranslator
 from bot.services.video import VideoService
 
@@ -19,7 +19,7 @@ class HandlerDeps:
         self,
         store: InMemoryJobStore,
         video_service: VideoService,
-        transcriber: AssemblyAITranscriber,
+        transcriber: WhisperTranscriber,
         translator: LibreTranslator,
         sheets_logger: GoogleSheetsLogger,
         max_preview_chars: int,

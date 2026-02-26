@@ -1,19 +1,17 @@
 from pathlib import Path
 
-import assemblyai as aai
+import whisper
 
 
-class AssemblyAITranscriber:
-    def __init__(self, api_key: str) -> None:
-        aai.settings.api_key = api_key
-        self._transcriber = aai.Transcriber()
+class WhisperTranscriber:
+    def __init__(self, model_name: str = "base", language: str | None = None) -> None:
+        self.model_name = model_name
+        self.language = language
+        self._model = whisper.load_model(model_name)
 
     def transcribe(self, media_path: Path) -> str:
-        transcript = self._transcriber.transcribe(str(media_path))
-
-        if transcript.status == aai.TranscriptStatus.error:
-            raise RuntimeError(transcript.error or "Transcription failed")
-        if not transcript.text:
-            raise RuntimeError("AssemblyAI returned empty transcript")
-
-        return transcript.text
+        result = self._model.transcribe(str(media_path), language=self.language)
+        text = (result.get("text") or "").strip()
+        if not text:
+            raise RuntimeError("Whisper returned empty transcript")
+        return text
