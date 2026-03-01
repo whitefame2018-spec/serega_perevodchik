@@ -1,13 +1,13 @@
 # Telegram-бот для перевода видео по ссылке
 
-Бот принимает ссылку на видео, скачивает видеофайл, делает транскрипцию через **Whisper (локально)**, переводит сегменты через **LibreTranslate (self-hosted)** и отправляет пользователю **видео с переведёнными субтитрами** + текст перевода.
+Бот принимает ссылку на видео, скачивает видеофайл, делает транскрипцию через **Whisper (локально)**, переводит сегменты через **Google Translate** и отправляет пользователю **видео с переведёнными субтитрами** + текст перевода.
 
 ## Что умеет бот
 
 1. Принимает ссылку на видео.
 2. Скачивает видео (`yt-dlp`).
 3. Делает локальную транскрипцию (Whisper).
-4. Переводит сегменты транскрипции (LibreTranslate).
+4. Переводит сегменты транскрипции (Google Translate).
 5. Генерирует `.srt` и вшивает субтитры в видео (`ffmpeg`).
 6. Отправляет пруф, затем по approve присылает `.txt` + видео с переводом.
 
@@ -24,7 +24,7 @@ bot/
   services/
     video.py         # скачивание видео + вшивание субтитров
     transcription.py # Whisper + сегменты
-    translation.py   # LibreTranslate
+    translation.py   # Google Translate
     subtitles.py     # генерация .srt
     sheets.py
     storage.py
@@ -71,9 +71,7 @@ TELEGRAM_BOT_TOKEN=...
 WHISPER_MODEL=base
 WHISPER_LANGUAGE=   # например: ru / en (пусто = автоопределение)
 
-# LibreTranslate (локальный/self-hosted)
-LIBRETRANSLATE_URL=http://127.0.0.1:5000/translate
-LIBRETRANSLATE_API_KEY=  # обычно пусто для локального запуска
+# Google Translate
 SOURCE_LANG=auto
 TARGET_LANG=ru
 
@@ -85,20 +83,6 @@ MAX_PREVIEW_CHARS=1400
 GOOGLE_SHEETS_CREDENTIALS_PATH=./google_service_account.json
 GOOGLE_SHEETS_SPREADSHEET_ID=
 GOOGLE_SHEETS_WORKSHEET=Sheet1
-```
-
-## Проверка LibreTranslate (локально)
-
-```bash
-curl -X POST http://127.0.0.1:5000/translate \
-  -H "Content-Type: application/json" \
-  -d '{"q":"hello","source":"en","target":"ru","format":"text"}'
-```
-
-## Как поднять LibreTranslate локально
-
-```bash
-docker run -d -p 5000:5000 libretranslate/libretranslate
 ```
 
 ## Запуск бота

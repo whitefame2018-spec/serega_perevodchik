@@ -8,7 +8,7 @@ from bot.services.sheets import GoogleSheetsLogger
 from bot.services.storage import InMemoryJobStore, JobStatus, TranslationJob
 from bot.services.subtitles import SubtitleService
 from bot.services.transcription import WhisperTranscriber
-from bot.services.translation import LibreTranslator
+from bot.services.translation import GoogleTranslateService
 from bot.services.video import VideoService
 
 
@@ -22,7 +22,7 @@ class HandlerDeps:
         video_service: VideoService,
         subtitle_service: SubtitleService,
         transcriber: WhisperTranscriber,
-        translator: LibreTranslator,
+        translator: GoogleTranslateService,
         sheets_logger: GoogleSheetsLogger,
         max_preview_chars: int,
     ) -> None:
@@ -47,7 +47,7 @@ def configure(dependencies: HandlerDeps) -> None:
 async def start(message: Message) -> None:
     await message.answer(
         "Привет! Пришли ссылку на видео.\n"
-        "Я скачаю видео, сделаю транскрипцию через Whisper, переведу через LibreTranslate "
+        "Я скачаю видео, сделаю транскрипцию через Whisper, переведу через Google Translate "
         "и пришлю видео с субтитрами на проверку."
     )
 

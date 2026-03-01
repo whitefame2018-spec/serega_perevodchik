@@ -8,7 +8,7 @@ from bot.services.sheets import GoogleSheetsLogger
 from bot.services.storage import InMemoryJobStore
 from bot.services.subtitles import SubtitleService
 from bot.services.transcription import WhisperTranscriber
-from bot.services.translation import LibreTranslator
+from bot.services.translation import GoogleTranslateService
 from bot.services.video import VideoService
 
 
@@ -24,11 +24,9 @@ async def main() -> None:
             video_service=VideoService(settings.temp_dir),
             subtitle_service=SubtitleService(),
             transcriber=WhisperTranscriber(model_name=settings.whisper_model, language=settings.whisper_language),
-            translator=LibreTranslator(
-                base_url=settings.libretranslate_url,
+            translator=GoogleTranslateService(
                 source_lang=settings.source_lang,
                 target_lang=settings.target_lang,
-                api_key=settings.libretranslate_api_key,
             ),
             sheets_logger=GoogleSheetsLogger(
                 credentials_path=settings.sheets_credentials_path,
