@@ -26,9 +26,16 @@ class VideoService:
             raise FileNotFoundError(f"Video file not found for job {job_id}")
         return result
 
+    @staticmethod
+    def _format_subtitles_path_for_ffmpeg(subtitles_file: Path) -> str:
+        normalized = subtitles_file.resolve().as_posix()
+        escaped = normalized.replace("'", r"'\\''")
+        escaped = escaped.replace(":", r"\:")
+        return f"'{escaped}'"
+
     def burn_subtitles(self, input_video: Path, subtitles_file: Path, job_id: str) -> Path:
         output_video = self.temp_dir / f"{job_id}_subtitled.mp4"
-        escaped_subtitles = str(subtitles_file).replace("\\", "\\\\").replace(":", "\\:")
+        subtitles_arg = self._format_subtitles_path_for_ffmpeg(subtitles_file)
 
         cmd = [
             "ffmpeg",
@@ -36,9 +43,17 @@ class VideoService:
             "-i",
             str(input_video),
             "-vf",
-            f"subtitles={escaped_subtitles}",
+            f"subtitles={subtitles_arg}",
+            "-c:v",
+            "libx264",
+            "-preset",
+            "veryfast",
+            "-crf",
+            "28",
             "-c:a",
-            "copy",
+            "aac",
+            "-b:a",
+            "128k",
             str(output_video),
         ]
         process = subprocess.run(cmd, capture_output=True, text=True)

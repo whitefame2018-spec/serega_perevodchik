@@ -15,7 +15,6 @@ class Settings:
     source_lang: str
     target_lang: str
     temp_dir: str
-    max_preview_chars: int
     sheets_credentials_path: str | None
     sheets_spreadsheet_id: str | None
     sheets_worksheet_name: str
@@ -36,7 +35,6 @@ def load_settings() -> Settings:
         source_lang=os.getenv("SOURCE_LANG", "auto"),
         target_lang=os.getenv("TARGET_LANG", "ru"),
         temp_dir=os.getenv("TEMP_DIR", "./tmp"),
-        max_preview_chars=int(os.getenv("MAX_PREVIEW_CHARS", "1400")),
         sheets_credentials_path=os.getenv("GOOGLE_SHEETS_CREDENTIALS_PATH"),
         sheets_spreadsheet_id=os.getenv("GOOGLE_SHEETS_SPREADSHEET_ID"),
         sheets_worksheet_name=os.getenv("GOOGLE_SHEETS_WORKSHEET", "Sheet1"),
